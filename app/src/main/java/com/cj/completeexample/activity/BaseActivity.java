@@ -50,7 +50,7 @@ public class BaseActivity extends Activity {
 
         switch (requestCode){
             case Constants.PERMISSION_CALL_PHONE:
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                     doCallPhone();
                 }else {
                     ToastUtil.shortToast(this,"请授权拨打电话权限");
