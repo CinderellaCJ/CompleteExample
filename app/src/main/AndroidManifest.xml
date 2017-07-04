@@ -15,14 +15,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".activity.MainActivity">
-
-            <!--
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            -->
         </activity>
 
         <meta-data
@@ -32,20 +29,8 @@
             android:name="${UMENG_CHANNEL_VALUE}"
             android:value="Channel ID" />
 
-        <activity android:name=".activity.PermissionActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity android:name=".activity.BaseActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+        <activity android:name=".activity.PermissionActivity"/>
+        <activity android:name=".activity.BaseActivity"/>
         <activity android:name=".activity.ChatActivity" />
         <activity android:name=".activity.HttpActivity"></activity>
     </application>

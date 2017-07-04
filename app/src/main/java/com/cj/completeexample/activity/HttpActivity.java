@@ -1,28 +1,36 @@
 package com.cj.completeexample.activity;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 import com.cj.completeexample.R;
+import com.cj.completeexample.bean.Person;
+import com.cj.completeexample.interf.HttpCallBackListener;
+import com.cj.completeexample.utils.HttpUtil;
+import com.cj.completeexample.utils.LogUtil;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
-import java.io.BufferedReader;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.StringReader;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.Response;
 
-public class HttpActivity extends AppCompatActivity {
+public class HttpActivity extends BaseActivity {
 
 
     @BindView(R.id.txt_request)
@@ -53,60 +61,34 @@ public class HttpActivity extends AppCompatActivity {
     }
 
     private void sendRequestWithHttpConnect() {
-        new Thread(new Runnable() {
+        HttpUtil.sendRequestWithHttpConnect("http://192.168.2.101/testDate.json", new HttpCallBackListener() {
             @Override
-            public void run() {
-                HttpURLConnection connection = null;
-                BufferedReader reader = null;
-                try {
-                    URL url = new URL("http://www.baidu.com");
-                    connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod("GET");
-                    connection.setConnectTimeout(8000);
-                    connection.setReadTimeout(8000);
-                    InputStream ins = connection.getInputStream();
-                    reader = new BufferedReader(new InputStreamReader(ins));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-                    showResponse(response.toString());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    if (reader != null) {
-                        try {
-                            reader.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    if (connection != null) {
-                        connection.disconnect();
-                    }
-
-                }
+            public void onFinish(String response) {
+                showResponse(response);
+                parseJsonWithGson(response);
             }
-        }).start();
+
+            @Override
+            public void onError(Exception e) {
+
+            }
+        });
     }
 
     private void sendRequestWithOkHttp() {
-        new Thread(new Runnable() {
+        HttpUtil.sendRequestWithOkHttp("http://192.168.2.101/testDate.json", new Callback() {
             @Override
-            public void run() {
-                try {
-                    OkHttpClient client = new OkHttpClient();
-                    Request request = new Request.Builder().url("http://www.baidu.com").build();
-                    Response response = client.newCall(request).execute();
-                    String responseData = response.body().toString();
-                    showResponse(responseData);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            public void onFailure(Call call, IOException e) {
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String responseDate = response.body().string();
+                showResponse(responseDate);
+                parseJsonWithGson(responseDate);
 
             }
-        }).start();
+        });
 
     }
 
@@ -118,6 +100,65 @@ public class HttpActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void parseXmlWithPull(String responseData) {
+        try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            XmlPullParser parser = factory.newPullParser();
+            parser.setInput(new StringReader(responseData));
+            int eventType = parser.getEventType();
+            String id = "";
+            String name = "";
+            while (eventType != XmlPullParser.END_DOCUMENT){
+                String nodeName = parser.getName();
+                switch (eventType){
+                    case XmlPullParser.START_TAG:
+                        if ("id".equals(nodeName)){
+                            id = parser.nextText();
+                        }else if ("name".equals(nodeName)){
+                            name = parser.nextText();
+                        }
+                        break;
+                    case XmlPullParser.END_TAG:
+                        if ("song".equals(nodeName)){
+                            LogUtil.d(id + name);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                eventType = parser.next();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void parseJsonWithJsonObject(String reponseDate){
+        try {
+            JSONArray jsonArray = new JSONArray(reponseDate);
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                String id= jsonObject.getString("id");
+                String name = jsonObject.getString("name");
+                LogUtil.d(id + name);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void parseJsonWithGson(String resposeDate){
+        Gson gson = new Gson();
+        List<Person> personList = gson.fromJson(resposeDate,new TypeToken<List<Person>>(){}.getType());
+        for (Person per : personList){
+            String id = per.getId();
+            String name = per.getName();
+            LogUtil.d(id + name);
+        }
+
+    }
+
 
 
 }
